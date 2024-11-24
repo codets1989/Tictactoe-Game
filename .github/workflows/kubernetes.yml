@@ -36,5 +36,5 @@ jobs:
     # Step 5: Apply Kubernetes resources (deployment and service)
     - name: Deploy to Kubernetes (EKS)
       run: |
-        kubectl apply -f k8s/deployment.yaml
-        kubectl apply -f k8s/service.yaml
+        kubectl apply -f k8s/deployment.yml
+        kubectl apply -f k8s/service.yml
