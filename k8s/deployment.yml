@@ -16,4 +16,4 @@ spec:
       - name: my-app-container
         image: codets1989/secure-devops-app:latest
         ports:
-        - containerPort: 80
+        - containerPort: 3000
