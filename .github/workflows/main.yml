@@ -31,4 +31,31 @@ jobs:
         run: |
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
           docker tag secure-devops-app:latest codets1989/secure-devops-app:latest  
-          docker push codets1989/secure-devops-app:latest  
+          docker push codets1989/secure-devops-app:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2  # Set your region
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          kubectl-version: 'v1.24.0'  # Optional, specify the kubectl version
+
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks --region us-east-2 update-kubeconfig --name codets
+
+      - name: Deploy to Kubernetes (EKS)
+        run: |
+          kubectl apply -f k8s/deployment.yml
+          kubectl apply -f k8s/service.yml
