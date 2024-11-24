@@ -1,24 +1,40 @@
-name: Deploy to Kubernetes
+name: Deploy to EKS
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   deploy:
-    name: Deploy to Kubernetes
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Create kubeconfig
+    # Step 1: Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Step 2: Set up AWS credentials using secrets
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2  # Set your region
+
+    # Step 3: Set up kubectl
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v1
+      with:
+        kubectl-version: 'v1.24.0'  # Optional, specify the kubectl version
+
+    # Step 4: Update kubeconfig for EKS
+    - name: Update kubeconfig for EKS
       run: |
-        mkdir ${HOME}/.kube
-        echo ${{ secrets.KUBE_CONFIG }} | base64 --decode > ${HOME}/.kube/config
-        cat ${HOME}/.kube/config
-    - name: Use context
-      run: kubectl config use-context arn:aws:eks:us-east-2:499514124524:cluster/codets
-    - name: Deploy to K8s
-      run: kubectl apply -f k8s/
+        aws eks --region us-east-2 update-kubeconfig --name codets
+
+    # Step 5: Apply Kubernetes resources (deployment and service)
+    - name: Deploy to Kubernetes (EKS)
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
